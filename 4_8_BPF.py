@@ -38,6 +38,13 @@ H = np.polyval(b, z) / np.polyval(a, z)
 # Normalize 
 H = H / np.max(np.abs(H))
 
+# Define the frequency range for plotting 
+freq_range_min = -50e6
+freq_range_max = 50e6  
+
+# Apply the frequency range filter
+mask = (frequencies >= freq_range_min) & (frequencies <= freq_range_max)
+
 # Unit circle in the complex plane
 unit_circle = np.exp(1j * omega)
 
@@ -57,7 +64,7 @@ plt.show()
 # Plot magnitude response
 plt.figure(2)
 plt.subplot(2, 1, 1)
-plt.plot(frequencies/1e6, 20 * np.log10(np.abs(H)), 'b')
+plt.plot(frequencies[mask]/1e6, 20 * np.log10(np.abs(H[mask])), 'b')
 plt.title('Frequency Response 4/8 BPF')
 plt.ylabel('Magnitude [dB]')
 plt.grid()
