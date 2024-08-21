@@ -71,11 +71,15 @@ def BPF48CC(Ch, Cr, fs, beta):
     # Normalize 
     H = H / np.max(np.abs(H))
     
-    print('4/8 BPF CC--------------------------------')
-    print('Zo = Add eq')
-    print('Fc = add eq')
+    Zo = 1 / (Cr * fs)
+    fc = (fs / (2 * np.pi)) * np.arctan(((1 - alpha) * np.sin(np.pi / 4)) / (alpha + (1 - alpha) * np.cos(np.pi / 4)))
+    print('4/8 BPF--------------------------------')
+    print('Zo = ', Zo)
+    print('Fc = ', fc/1e6, ' MHz')
+    print('arctan((1 - alpha)sin(pi/4)) / alpha + (1 - alpha)cos(pi/4) = ', np.arctan(((1 - alpha) * np.sin(np.pi / 4)) / (alpha + (1 - alpha) * np.cos(np.pi / 4))))
+    print('fs / (2 * np.pi) = ', fs / (2 * np.pi))
     
-    return(H, omega)
+    return(H, omega, Zo, fc)
 
 
 
