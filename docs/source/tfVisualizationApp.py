@@ -46,6 +46,43 @@ def main():
             st.session_state.Ch = st.text_input(label='End Frequency (Hz)', value = 20e-12)
             st.session_state.beta = st.text_input(label='Maximum Current Amplitude (A)', value = -0.3)
             st.session_state.fs = st.text_input(label='Minimum Current Amplitude (A)', value = 9.6e9)
+            
+            
+
+    if st.button("Generate"):
+        Ch = float(st.session_state.Ch)
+        Cr = float(st.session_state.Cr)
+        fs = float(st.session_state.fs)
+        
+        if st.session_state.filter_type == '4/4 BPF':
+            H, omega, st.session_state.Zo, st.session_state.fc = filters.BPF44(Ch, Cr, fs)
+            
+            st.session_state.H_real = H.real.astype(float)
+            st.session_state.H_imag = H.imag.astype(float) 
+
+            frequencies = omega * fs / (2 * np.pi)
+            fig = go.Figure()
+            
+            fig.add_trace(go.Scatter(
+                x=frequencies,
+                y=20 * np.log10(np.abs(H)),
+                mode='lines',
+                name='Magnitude (dB)'
+            ))
+            
+            fig.update_layout(
+                title='Magnitude Response of the 4/4 BPF',
+                xaxis_title='Frequency (Hz)',
+                yaxis_title='Magnitude (dB)',
+                template='plotly_dark'
+            )
+            
+            st.session_state.fig = fig
+            st.write(st.session_state.fig)
+    else:
+        if st.session_state.fig != 0:
+            st.write(st.session_state.fig)  
+    
 
     
 if __name__ == "__main__":
@@ -59,9 +96,9 @@ if __name__ == "__main__":
     if "tf_name" not in st.session_state:
         st.session_state.tf_name = 0
     if "Cr" not in st.session_state:
-        st.session_state.Cr = 0
+        st.session_state.Cr = 0.0
     if "Ch" not in st.session_state:
-        st.session_state.Ch = 0
+        st.session_state.Ch = 0.0
     if "beta" not in st.session_state:
         st.session_state.beta = 0
     if "fs" not in st.session_state:
@@ -69,6 +106,17 @@ if __name__ == "__main__":
         
     if "filter_type" not in st.session_state:
         st.session_state.filter_type = 0
-
+        
+    if "H_imag" not in st.session_state:
+        st.session_state.H_imag = 0
+    if "H_real" not in st.session_state:
+        st.session_state.H_real = 0
+    if "Zo" not in st.session_state:
+        st.session_state.Zo = 0
+    if "fc" not in st.session_state:
+        st.session_state.fc = 0
+        
+    if "fig" not in st.session_state:
+        st.session_state.fig = 0
 
     main()
