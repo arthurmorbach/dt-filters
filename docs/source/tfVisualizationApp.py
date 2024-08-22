@@ -82,8 +82,62 @@ def main():
     else:
         if st.session_state.fig != 0:
             st.write(st.session_state.fig)  
+            
     
+    # table with data selection
+ #   transfer_functions = local_session.query(TF).all()
+ #   number_of_tfs = len(local_session.query(TF).all())
+ #   colu1, colu2, colu3, colu4, colu5 = st.columns(5)
+    
+    query = 'SELECT * FROM tf'
+    
+    df_1 = pd.read_sql(query, engine)
+   
+    # convert the Column type to datetime
+    df_1['time'] = pd.to_datetime(df_1['time'])
+    
+    # organize the information that will be displayed
+    # TF Name (df_1) | Cr (F) (df_1) | Ch (F) (df_1) | beta (df_1) | Fs (Hz) (df_1) | Fc (Hz) (df_1) | Zo (Ohms) (df_1) | datetime (df_1)
 
+    df_1.rename(columns = {'id' : 'ID', 
+                               'tf_name' : 'TF Name',
+                               'Cr' : 'Cr (F)',
+                               'Ch' : 'Ch (F)',
+                               'beta' : 'beta',
+                               'fs' : 'Fs (Hz)',
+                               'fc' : 'Fc (Hz)', 
+                               'Zo' : 'Zo (Ohms)', 
+                               'time' : 'datetime'}, inplace = True)
+
+    # drop unecessary columns for the user
+   # df_1.drop(columns = ['columns to drop', 'columns to drop'], inplace = True)
+
+    # add checkbox
+    df_1.insert(0, 'Select', [False] * len(df_1))
+
+    # convert "Select" column to boolean type
+    df_1['Select'] = df_1['Select'].astype(bool)
+    
+    edited_df = st.data_editor(
+            df_1,
+            column_config={
+                "Select": st.column_config.CheckboxColumn(
+                    "Select",
+                    help="Select",
+                    default=False,
+                ),
+                "ID" : None
+            },
+            disabled=["widgets"],
+            hide_index=True,
+            )
+
+    st.session_state.selected_tf = edited_df[edited_df['Select'] == True]['ID'].tolist()
+    
+    print('SELECTED TF: ', st.session_state.selected_tf)
+    
+    
+    
     
 if __name__ == "__main__":
     st.set_page_config(
@@ -118,5 +172,8 @@ if __name__ == "__main__":
         
     if "fig" not in st.session_state:
         st.session_state.fig = 0
+        
+    if "selected_tf" not in st.session_state:
+        st.session_state.selected_tf = 0
 
     main()
