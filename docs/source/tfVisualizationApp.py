@@ -229,8 +229,30 @@ def delete_from_db():
     
     
 def plot_selected():
-    pass
+    # if len(st.session_state.selected_tf):
+    #     specs = []
+    #     for i in range(len(st.session_state.selected_tf)):
+    #         specs.append(f'Battery {local_session.query(TF).filter_by(id = st.session_state.selected_tf).first().tf_name}')
 
+    #     dfs = {}
+        
+    #     for index, spec in enumerate(specs):
+    #         tf_id = st.session_state.selected_tf[index]
+    #         dfs[spec] = pd.read_sql(f'SELECT * FROM tf WHERE id = {int(st.session_state.selected_tf)}', engine)
+
+
+    #     fig = go.Figure()
+    #     for i in dfs:
+    #         fig = fig.add_trace(go.Scatter(
+    #             x=frequencies[mask],
+    #             y=20*np.log10(H[mask]),
+    #             name=i,
+    #             hoverinfo='text+x+y'
+    #         ))
+    #     st.session_state.fig = fig
+    # else: 
+    #     pass
+    pass
     
     
 if __name__ == "__main__":
