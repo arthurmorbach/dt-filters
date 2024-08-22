@@ -22,16 +22,6 @@ class TF(Base):
     fc : Mapped[str]
     Zo : Mapped[str]
     time : Mapped[str] = mapped_column(nullable = False)
-    tf_points: Mapped[List["TF_Points"]] = relationship(back_populates = 'tf', cascade = 'all, delete', passive_deletes = True)
-
-class TF_Points(Base):
-    __tablename__ = 'tf_point'
-    id : Mapped[int] = mapped_column(primary_key = True)
-    tf_id : Mapped[int] = mapped_column(ForeignKey('tf.id'), nullable = False) 
-    real_part : Mapped[str]
-    imaginary_part : Mapped[str]
-    tf : Mapped["TF"] = relationship(back_populates = 'tf_points')
-
 
 Base.metadata.create_all(bind = engine)
 
