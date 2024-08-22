@@ -15,12 +15,12 @@ class TF(Base):
     __tablename__ = 'tf'
     id : Mapped[int] = mapped_column(primary_key = True)
     tf_name : Mapped[str]
-    Cr : Mapped[float]
-    Ch : Mapped[float]
-    beta : Mapped[float]
-    fs : Mapped[float]
-    fc : Mapped[float]
-    Zo : Mapped[float]
+    Cr : Mapped[str]
+    Ch : Mapped[str]
+    beta : Mapped[str]
+    fs : Mapped[str]
+    fc : Mapped[str]
+    Zo : Mapped[str]
     time : Mapped[str] = mapped_column(nullable = False)
     tf_points: Mapped[List["TF_Points"]] = relationship(back_populates = 'tf', cascade = 'all, delete', passive_deletes = True)
 
@@ -29,7 +29,7 @@ class TF_Points(Base):
     id : Mapped[int] = mapped_column(primary_key = True)
     tf_id : Mapped[int] = mapped_column(ForeignKey('tf.id'), nullable = False) 
     real_part : Mapped[str]
-    imaginary_part : Mapped[float]
+    imaginary_part : Mapped[str]
     tf : Mapped["TF"] = relationship(back_populates = 'tf_points')
 
 
