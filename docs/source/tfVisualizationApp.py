@@ -36,6 +36,8 @@ def main():
             st.session_state.Ch = st.text_input(label='History Capacitor (F)', value = local_session.query(TF).order_by(TF.id.desc()).first().Ch)
             st.session_state.beta = st.text_input(label='beta (Gain)', value = local_session.query(TF).order_by(TF.id.desc()).first().beta)
             st.session_state.fs = st.text_input(label='Samplig Frequency (Hz)', value = local_session.query(TF).order_by(TF.id.desc()).first().fs)
+            st.session_state.f_mask_start = st.text_input(label='Start Frequency (Hz)', value = -50e6)
+            st.session_state.f_mask_end = st.text_input(label='End Frequency (Hz)', value = 50e6)
         else:
             st.session_state.tf_name = st.text_input(label = 'TF Name', value = 'tttt') #f"TF {datetime.utcnow()}")
 
@@ -43,33 +45,91 @@ def main():
                 label = "Select Filter", 
                 options = types_of_filters)
             
-            st.session_state.Cr = st.text_input(label='Start Frequency (Hz)', value = 75e-15)
-            st.session_state.Ch = st.text_input(label='End Frequency (Hz)', value = 20e-12)
+            st.session_state.Cr = st.text_input(label='Rotarion Capacitor (F)', value = 75e-15)
+            st.session_state.Ch = st.text_input(label='History Capacitor (F)', value = 20e-12)
             st.session_state.beta = st.text_input(label='beta (Gain)', value = 0)
             st.session_state.fs = st.text_input(label='Sampling Frequency (Hz)', value = 9.6e9)
             
+            st.session_state.f_mask_start = st.text_input(label='Start Frequency (Hz)', value = -50e6)
+            st.session_state.f_mask_end = st.text_input(label='End Frequency (Hz)', value = 50e6)
             
-
+            
+    
     if st.button("Generate"):
         Ch = float(st.session_state.Ch)
         Cr = float(st.session_state.Cr)
         fs = float(st.session_state.fs)
+        beta = float(st.session_state.beta)
         
         if st.session_state.filter_type == '4/4 BPF':
             H, omega, st.session_state.Zo, st.session_state.fc = filters.BPF44(Ch, Cr, fs)
 
             frequencies = omega * fs / (2 * np.pi)
-            fig = go.Figure()
             
+            # Apply the frequency range filter
+            mask = (frequencies >= float(st.session_state.f_mask_start)) & (frequencies <= float(st.session_state.f_mask_end))
+
+            fig = go.Figure()
             fig.add_trace(go.Scatter(
-                x=frequencies,
-                y=20 * np.log10(np.abs(H)),
+                x=frequencies[mask],
+                y=20 * np.log10(np.abs(H[mask])),
                 mode='lines',
                 name='Magnitude (dB)'
             ))
             
             fig.update_layout(
                 title='Magnitude Response of the 4/4 BPF',
+                xaxis_title='Frequency (Hz)',
+                yaxis_title='Magnitude (dB)',
+                template='plotly_dark'
+            )
+            
+            st.session_state.fig = fig
+            st.write(st.session_state.fig)
+            
+        elif st.session_state.filter_type == '4/8 BPF':
+            H, omega, st.session_state.Zo, st.session_state.fc = filters.BPF48(Ch, Cr, fs)
+
+            frequencies = omega * fs / (2 * np.pi)
+            
+            # Apply the frequency range filter
+            mask = (frequencies >= float(st.session_state.f_mask_start)) & (frequencies <= float(st.session_state.f_mask_end))
+
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=frequencies[mask],
+                y=20 * np.log10(np.abs(H[mask])),
+                mode='lines',
+                name='Magnitude (dB)'
+            ))
+            
+            fig.update_layout(
+                title='Magnitude Response of the 4/8 BPF',
+                xaxis_title='Frequency (Hz)',
+                yaxis_title='Magnitude (dB)',
+                template='plotly_dark'
+            )
+            st.session_state.fig = fig
+            st.write(st.session_state.fig)
+            
+        elif st.session_state.filter_type == '4/8 BPF CC':
+            H, omega, st.session_state.Zo, st.session_state.fc = filters.BPF48CC(Ch, Cr, fs, beta)
+
+            frequencies = omega * fs / (2 * np.pi)
+            
+            # Apply the frequency range filter
+            mask = (frequencies >= float(st.session_state.f_mask_start)) & (frequencies <= float(st.session_state.f_mask_end))
+
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=frequencies[mask],
+                y=20 * np.log10(np.abs(H[mask])),
+                mode='lines',
+                name='Magnitude (dB)'
+            ))
+            
+            fig.update_layout(
+                title='Magnitude Response of the 4/8 BPFCC',
                 xaxis_title='Frequency (Hz)',
                 yaxis_title='Magnitude (dB)',
                 template='plotly_dark'
@@ -86,11 +146,11 @@ def main():
     
     with col1:
         st.button("Save Trasfer Function", on_click = save_transfer_function)
-    
-    
-    
-    
-    
+    with col2:
+        st.button("Delete from DB", on_click = delete_from_db)
+    with col3:
+        st.button("Plot Selected TFs", on_click = plot_selected)
+
     # table with data selection
  #   transfer_functions = local_session.query(TF).all()
  #   number_of_tfs = len(local_session.query(TF).all())
@@ -144,9 +204,6 @@ def main():
     print('SELECTED TF: ', st.session_state.selected_tf)
     
     
-    
-    
-
 def save_transfer_function():
     TF_to_add= TF(tf_name = st.session_state.tf_name, 
                   Cr = str(st.session_state.Cr), 
@@ -161,12 +218,19 @@ def save_transfer_function():
     local_session.commit()
     
     
+def delete_from_db():
+    if len(st.session_state.selected_tf):
+        local_session.query(TF).filter(TF.id.in_(st.session_state.selected_tf)).delete()
+        local_session.commit()
+
+        local_session.close()
+    else:
+        pass
     
     
-    
-    
-    
-    
+def plot_selected():
+    pass
+
     
     
 if __name__ == "__main__":
@@ -187,6 +251,10 @@ if __name__ == "__main__":
         st.session_state.beta = 0
     if "fs" not in st.session_state:
         st.session_state.fs = 0
+    if "f_mask_start" not in st.session_state:
+        st.session_state.f_mask_start = 0
+    if "f_mask_end" not in st.session_state:
+        st.session_state.f_mask_end = 0
         
     if "filter_type" not in st.session_state:
         st.session_state.filter_type = 0
