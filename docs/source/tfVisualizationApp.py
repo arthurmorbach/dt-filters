@@ -24,9 +24,12 @@ def main():
 
         # use the settings from the last reading, if no settings, use standard values
         if local_session.query(TF).all():
-            st.session_state.filter_type = st.selectbox(
+            filter_type = st.selectbox(
                 label = "Select Filter", 
                 options = types_of_filters)
+            if filter_type == types_of_filters[0]: st.session_state.filter_type = 'BPF44'
+            elif filter_type == types_of_filters[1]: st.session_state.filter_type = 'BPF48'
+            elif filter_type == types_of_filters[2]: st.session_state.filter_type = 'BPF48CC'
             
             st.session_state.tf_name = st.text_input(
                 label = 'TF Name', 
@@ -41,9 +44,12 @@ def main():
         else:
             st.session_state.tf_name = st.text_input(label = 'TF Name', value = 'tttt') #f"TF {datetime.utcnow()}")
 
-            st.session_state.filter_type = st.selectbox(
+            filter_type = st.selectbox(
                 label = "Select Filter", 
                 options = types_of_filters)
+            if filter_type == types_of_filters[0]: st.session_state.filter_type = 'BPF44'
+            elif filter_type == types_of_filters[1]: st.session_state.filter_type = 'BPF48'
+            elif filter_type == types_of_filters[2]: st.session_state.filter_type = 'BPF48CC'
             
             st.session_state.Cr = st.text_input(label='Rotarion Capacitor (F)', value = 75e-15)
             st.session_state.Ch = st.text_input(label='History Capacitor (F)', value = 20e-12)
@@ -61,82 +67,30 @@ def main():
         fs = float(st.session_state.fs)
         beta = float(st.session_state.beta)
         
-        if st.session_state.filter_type == '4/4 BPF':
-            H, omega, st.session_state.Zo, st.session_state.fc = filters.BPF44(Ch, Cr, fs)
+        H, omega, st.session_state.Zo, st.session_state.fc = filters.DFTF(st.session_state.filter_type, Ch, Cr, fs)
 
-            frequencies = omega * fs / (2 * np.pi)
-            
-            # Apply the frequency range filter
-            mask = (frequencies >= float(st.session_state.f_mask_start)) & (frequencies <= float(st.session_state.f_mask_end))
+        frequencies = omega * fs / (2 * np.pi)
+        
+        # Apply the frequency range filter
+        mask = (frequencies >= float(st.session_state.f_mask_start)) & (frequencies <= float(st.session_state.f_mask_end))
 
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(
-                x=frequencies[mask],
-                y=20 * np.log10(np.abs(H[mask])),
-                mode='lines',
-                name='Magnitude (dB)'
-            ))
-            
-            fig.update_layout(
-                title='Magnitude Response of the 4/4 BPF',
-                xaxis_title='Frequency (Hz)',
-                yaxis_title='Magnitude (dB)',
-                template='plotly_dark'
-            )
-            
-            st.session_state.fig = fig
-            st.write(st.session_state.fig)
-            
-        elif st.session_state.filter_type == '4/8 BPF':
-            H, omega, st.session_state.Zo, st.session_state.fc = filters.BPF48(Ch, Cr, fs)
-
-            frequencies = omega * fs / (2 * np.pi)
-            
-            # Apply the frequency range filter
-            mask = (frequencies >= float(st.session_state.f_mask_start)) & (frequencies <= float(st.session_state.f_mask_end))
-
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(
-                x=frequencies[mask],
-                y=20 * np.log10(np.abs(H[mask])),
-                mode='lines',
-                name='Magnitude (dB)'
-            ))
-            
-            fig.update_layout(
-                title='Magnitude Response of the 4/8 BPF',
-                xaxis_title='Frequency (Hz)',
-                yaxis_title='Magnitude (dB)',
-                template='plotly_dark'
-            )
-            st.session_state.fig = fig
-            st.write(st.session_state.fig)
-            
-        elif st.session_state.filter_type == '4/8 BPF CC':
-            H, omega, st.session_state.Zo, st.session_state.fc = filters.BPF48CC(Ch, Cr, fs, beta)
-
-            frequencies = omega * fs / (2 * np.pi)
-            
-            # Apply the frequency range filter
-            mask = (frequencies >= float(st.session_state.f_mask_start)) & (frequencies <= float(st.session_state.f_mask_end))
-
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(
-                x=frequencies[mask],
-                y=20 * np.log10(np.abs(H[mask])),
-                mode='lines',
-                name='Magnitude (dB)'
-            ))
-            
-            fig.update_layout(
-                title='Magnitude Response of the 4/8 BPFCC',
-                xaxis_title='Frequency (Hz)',
-                yaxis_title='Magnitude (dB)',
-                template='plotly_dark'
-            )
-            
-            st.session_state.fig = fig
-            st.write(st.session_state.fig)
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            x=frequencies[mask],
+            y=20 * np.log10(np.abs(H[mask])),
+            mode='lines',
+            name='Magnitude (dB)'
+        ))
+        
+        fig.update_layout(
+            title='Magnitude Response of the 4/4 BPF',
+            xaxis_title='Frequency (Hz)',
+            yaxis_title='Magnitude (dB)',
+            template='plotly_dark'
+        )
+        
+        st.session_state.fig = fig
+        st.write(st.session_state.fig)
     else:
         if st.session_state.fig != 0:
             st.write(st.session_state.fig)  

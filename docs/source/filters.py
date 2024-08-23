@@ -1,5 +1,14 @@
 import numpy as np
 
+
+def DFTF(filter, Ch, Cr, fs, beta = 0):
+    if filter == 'BPF44':
+        return BPF44(Ch, Cr, fs)
+    elif filter == 'BPF48':
+        return BPF48(Ch, Cr, fs)
+    elif filter == 'BPF48CC':
+        return BPF48CC(Ch, Cr, fs, beta)
+
 def BPF44(Ch, Cr, fs):
     k = 1 / (Ch + Cr)
     alpha = Ch / (Ch + Cr)
