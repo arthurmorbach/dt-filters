@@ -15,6 +15,7 @@ class TF(Base):
     __tablename__ = 'tf'
     id : Mapped[int] = mapped_column(primary_key = True)
     tf_name : Mapped[str]
+    filter_type : Mapped[str]
     Cr : Mapped[str]
     Ch : Mapped[str]
     beta : Mapped[str]
@@ -24,7 +25,3 @@ class TF(Base):
     time : Mapped[str] = mapped_column(nullable = False)
 
 Base.metadata.create_all(bind = engine)
-
-
-
-
