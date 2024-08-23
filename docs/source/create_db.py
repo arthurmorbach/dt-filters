@@ -1,8 +1,6 @@
-from sqlalchemy.orm import Mapped, mapped_column, relationship, declarative_base, sessionmaker, DeclarativeBase
-from sqlalchemy import ForeignKey, UniqueConstraint, create_engine, Text, JSON
-from datetime import datetime
+from sqlalchemy.orm import Mapped, mapped_column, declarative_base, sessionmaker
+from sqlalchemy import create_engine
 import os
-from typing import List, Optional
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 connection_string = "sqlite:///" + os.path.join(BASE_DIR, 'tf.db')
