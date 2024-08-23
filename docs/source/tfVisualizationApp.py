@@ -64,7 +64,7 @@ def main():
         fs = float(st.session_state.fs)
         beta = float(st.session_state.beta)
         
-        H, omega, st.session_state.Zo, st.session_state.fc = filters.DFTF(st.session_state.filter_type, Ch, Cr, fs)
+        H, omega, st.session_state.Zo, st.session_state.fc = filters.DFTF(st.session_state.filter_type, Ch, Cr, fs, beta)
 
         frequencies = omega * fs / (2 * np.pi)
         
@@ -201,7 +201,7 @@ def plot_selected():
             beta = float(tf.beta)
             
             # Calculate the transfer function
-            H, omega, Zo, fc = filters.DFTF(tf.filter_type, Ch, Cr, fs)
+            H, omega, Zo, fc = filters.DFTF(tf.filter_type, Ch, Cr, fs, beta)
 
             frequencies = omega * fs / (2 * np.pi)
             
