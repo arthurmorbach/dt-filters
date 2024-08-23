@@ -121,14 +121,15 @@ def main():
     # TF Name (df_1) | Cr (F) (df_1) | Ch (F) (df_1) | beta (df_1) | Fs (Hz) (df_1) | Fc (Hz) (df_1) | Zo (Ohms) (df_1) | datetime (df_1)
 
     df_1.rename(columns = {'id' : 'ID', 
-                               'tf_name' : 'TF Name',
-                               'Cr' : 'Cr (F)',
-                               'Ch' : 'Ch (F)',
-                               'beta' : 'beta',
-                               'fs' : 'Fs (Hz)',
-                               'fc' : 'Fc (Hz)', 
-                               'Zo' : 'Zo (Ohms)', 
-                               'time' : 'datetime'}, inplace = True)
+                        'tf_name' : 'TF Name',
+                        'filter_type' : 'Filter Type',
+                        'Cr' : 'Cr (F)',
+                        'Ch' : 'Ch (F)',
+                        'beta' : 'beta',
+                        'fs' : 'Fs (Hz)',
+                        'fc' : 'Fc (Hz)', 
+                        'Zo' : 'Zo (Ohms)', 
+                        'time' : 'datetime'}, inplace = True)
 
     # drop unecessary columns for the user
    # df_1.drop(columns = ['columns to drop', 'columns to drop'], inplace = True)
@@ -160,6 +161,7 @@ def main():
     
 def save_transfer_function():
     TF_to_add= TF(tf_name = st.session_state.tf_name, 
+                  filter_type = st.session_state.filter_type,
                   Cr = str(st.session_state.Cr), 
                   Ch = str(st.session_state.Ch), 
                   beta = str(st.session_state.beta), 
@@ -183,30 +185,51 @@ def delete_from_db():
     
     
 def plot_selected():
-    # if len(st.session_state.selected_tf):
-    #     specs = []
-    #     for i in range(len(st.session_state.selected_tf)):
-    #         specs.append(f'Battery {local_session.query(TF).filter_by(id = st.session_state.selected_tf).first().tf_name}')
+    selected_tfs = st.session_state.selected_tf
+    
+    if not selected_tfs:
+        st.warning("No transfer functions selected.")
+        return
 
-    #     dfs = {}
-        
-    #     for index, spec in enumerate(specs):
-    #         tf_id = st.session_state.selected_tf[index]
-    #         dfs[spec] = pd.read_sql(f'SELECT * FROM tf WHERE id = {int(st.session_state.selected_tf)}', engine)
+    fig = go.Figure()
 
+    for tf_id in selected_tfs:
+        # Retrieve the transfer function parameters from the database
+        tf = local_session.query(TF).filter(TF.id == tf_id).first()
 
-    #     fig = go.Figure()
-    #     for i in dfs:
-    #         fig = fig.add_trace(go.Scatter(
-    #             x=frequencies[mask],
-    #             y=20*np.log10(H[mask]),
-    #             name=i,
-    #             hoverinfo='text+x+y'
-    #         ))
-    #     st.session_state.fig = fig
-    # else: 
-    #     pass
-    pass
+        if tf:
+            Ch = float(tf.Ch)
+            Cr = float(tf.Cr)
+            fs = float(tf.fs)
+            beta = float(tf.beta)
+            
+            # Calculate the transfer function
+            H, omega, Zo, fc = filters.DFTF(tf.filter_type, Ch, Cr, fs)
+
+            frequencies = omega * fs / (2 * np.pi)
+            
+            # Apply the frequency range filter
+            mask = (frequencies >= float(st.session_state.f_mask_start)) & (frequencies <= float(st.session_state.f_mask_end))
+
+            # Add the transfer function to the plot
+            fig.add_trace(go.Scatter(
+                x=frequencies[mask],
+                y=20 * np.log10(np.abs(H[mask])),
+                mode='lines',
+                name=tf.tf_name
+            ))
+    
+    # Update the layout of the plot
+    fig.update_layout(
+        title='Selected Transfer Functions',
+        xaxis_title='Frequency (Hz)',
+        yaxis_title='Magnitude (dB)',
+        template='plotly_dark'
+    )
+    
+    # Save and display the plot
+    st.session_state.fig = fig
+
     
     
 if __name__ == "__main__":
