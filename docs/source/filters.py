@@ -28,7 +28,7 @@ def BPF44(Ch, Cr, fs):
     
     Zo = 1 / (Cr * fs)
     fc = (fs / (2 * np.pi)) * np.arctan(Cr / Ch)
-    print('4/4 BPF--------------------------------')
+    print(f'4/4 BPF Ch = {Ch} Cr = {Cr} Fs = {fs}')
     print('Zo = ', Zo)
     print('Fc = ', fc/1e6, ' MHz')
     print('arctan(Cr / Ch) = ', np.arctan(Cr / Ch))
@@ -55,7 +55,7 @@ def BPF48(Ch, Cr, fs):
 
     Zo = 1 / (Cr * fs)
     fc = (fs / (2 * np.pi)) * np.arctan(((1 - alpha) * np.sin(np.pi / 4)) / (alpha + (1 - alpha) * np.cos(np.pi / 4)))
-    print('4/8 BPF--------------------------------')
+    print(f'4/8 BPF Ch = {Ch} Cr = {Cr} Fs = {fs}')
     print('Zo = ', Zo)
     print('Fc = ', fc/1e6, ' MHz')
     print('arctan((1 - alpha)sin(pi/4)) / alpha + (1 - alpha)cos(pi/4) = ', np.arctan(((1 - alpha) * np.sin(np.pi / 4)) / (alpha + (1 - alpha) * np.cos(np.pi / 4))))
@@ -82,7 +82,7 @@ def BPF48CC(Ch, Cr, fs, beta):
     
     Zo = 1 / (Cr * fs)
     fc = (fs / (2 * np.pi)) * np.arctan(((1 - alpha) * np.sin(np.pi / 4)) / (alpha + (1 - alpha) * np.cos(np.pi / 4)))
-    print('4/8 BPF--------------------------------')
+    print(f'4/8 BPF CC Ch = {Ch} Cr = {Cr} Fs = {fs} Beta = {beta}')
     print('Zo = ', Zo)
     print('Fc = ', fc/1e6, ' MHz')
     print('arctan((1 - alpha)sin(pi/4)) / alpha + (1 - alpha)cos(pi/4) = ', np.arctan(((1 - alpha) * np.sin(np.pi / 4)) / (alpha + (1 - alpha) * np.cos(np.pi / 4))))
