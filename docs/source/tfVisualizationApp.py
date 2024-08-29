@@ -18,38 +18,62 @@ def main():
         #     options = types_of_filters)
         
         st.header("Filter Setup")
+        
+        standalone_or_bank = st.selectbox(
+            label='Standalone or Cap Bank',
+            options=['Standalone', 'Cap Bank'])
+        if standalone_or_bank == 'Standalone':
+            # use the settings from the last reading, if no settings, use standard values
+            if local_session.query(TF).all():
+                filter_type = st.selectbox(
+                    label = "Select Filter", 
+                    options = types_of_filters)
+                if filter_type == types_of_filters[0]: st.session_state.filter_type = 'BPF44'
+                elif filter_type == types_of_filters[1]: st.session_state.filter_type = 'BPF48'
+                elif filter_type == types_of_filters[2]: st.session_state.filter_type = 'BPF48CC'
+                
+                st.session_state.tf_name = st.text_input(
+                    label = 'TF Name', 
+                    value = local_session.query(TF).filter(TF.id == local_session.query(TF).order_by(TF.id.desc()).first().id).first().tf_name)
 
-        # use the settings from the last reading, if no settings, use standard values
-        if local_session.query(TF).all():
+                st.session_state.Cr = st.text_input(label='Rotation Capacitor (F)', value = local_session.query(TF).order_by(TF.id.desc()).first().Cr)
+                st.session_state.Ch = st.text_input(label='History Capacitor (F)', value = local_session.query(TF).order_by(TF.id.desc()).first().Ch)
+                st.session_state.beta = st.text_input(label='beta (Gain)', value = local_session.query(TF).order_by(TF.id.desc()).first().beta)
+                st.session_state.fs = st.text_input(label='Samplig Frequency (Hz)', value = local_session.query(TF).order_by(TF.id.desc()).first().fs)
+                st.session_state.f_mask_start = st.text_input(label='Start Frequency (Hz)', value = -50e6)
+                st.session_state.f_mask_end = st.text_input(label='End Frequency (Hz)', value = 50e6)
+            else:
+                st.session_state.tf_name = st.text_input(label = 'TF Name', value = 'tttt') #f"TF {datetime.utcnow()}")
+
+                filter_type = st.selectbox(
+                    label = "Select Filter", 
+                    options = types_of_filters)
+                if filter_type == types_of_filters[0]: st.session_state.filter_type = 'BPF44'
+                elif filter_type == types_of_filters[1]: st.session_state.filter_type = 'BPF48'
+                elif filter_type == types_of_filters[2]: st.session_state.filter_type = 'BPF48CC'
+                
+                st.session_state.Cr = st.text_input(label='Rotation Capacitor (F)', value = 75e-15)
+                st.session_state.Ch = st.text_input(label='History Capacitor (F)', value = 20e-12)
+                st.session_state.beta = st.text_input(label='beta (Gain)', value = 0)
+                st.session_state.fs = st.text_input(label='Sampling Frequency (Hz)', value = 9.6e9)
+                
+                st.session_state.f_mask_start = st.text_input(label='Start Frequency (Hz)', value = -50e6)
+                st.session_state.f_mask_end = st.text_input(label='End Frequency (Hz)', value = 50e6)
+            
+        elif standalone_or_bank == 'Cap Bank':
             filter_type = st.selectbox(
-                label = "Select Filter", 
-                options = types_of_filters)
+                    label = "Select Filter", 
+                    options = types_of_filters)
             if filter_type == types_of_filters[0]: st.session_state.filter_type = 'BPF44'
             elif filter_type == types_of_filters[1]: st.session_state.filter_type = 'BPF48'
             elif filter_type == types_of_filters[2]: st.session_state.filter_type = 'BPF48CC'
             
-            st.session_state.tf_name = st.text_input(
-                label = 'TF Name', 
-                value = local_session.query(TF).filter(TF.id == local_session.query(TF).order_by(TF.id.desc()).first().id).first().tf_name)
-
-            st.session_state.Cr = st.text_input(label='Rotation Capacitor (F)', value = local_session.query(TF).order_by(TF.id.desc()).first().Cr)
-            st.session_state.Ch = st.text_input(label='History Capacitor (F)', value = local_session.query(TF).order_by(TF.id.desc()).first().Ch)
-            st.session_state.beta = st.text_input(label='beta (Gain)', value = local_session.query(TF).order_by(TF.id.desc()).first().beta)
-            st.session_state.fs = st.text_input(label='Samplig Frequency (Hz)', value = local_session.query(TF).order_by(TF.id.desc()).first().fs)
-            st.session_state.f_mask_start = st.text_input(label='Start Frequency (Hz)', value = -50e6)
-            st.session_state.f_mask_end = st.text_input(label='End Frequency (Hz)', value = 50e6)
-        else:
-            st.session_state.tf_name = st.text_input(label = 'TF Name', value = 'tttt') #f"TF {datetime.utcnow()}")
-
-            filter_type = st.selectbox(
-                label = "Select Filter", 
-                options = types_of_filters)
-            if filter_type == types_of_filters[0]: st.session_state.filter_type = 'BPF44'
-            elif filter_type == types_of_filters[1]: st.session_state.filter_type = 'BPF48'
-            elif filter_type == types_of_filters[2]: st.session_state.filter_type = 'BPF48CC'
+            st.session_state.tf_name = st.text_input(label = 'Cap Bank Name', value = 'CapBank0')
             
-            st.session_state.Cr = st.text_input(label='Rotarion Capacitor (F)', value = 75e-15)
-            st.session_state.Ch = st.text_input(label='History Capacitor (F)', value = 20e-12)
+            st.session_state.Cr_cb_unity = st.text_input(label='Rotation Capacitor Bank Unity (F)', value = 10.9e-15)
+            st.session_state.Cr_cb_bits = st.text_input(label='Rotation Capacitor Bank Bits', value = 5)
+            st.session_state.Ch_cb_unity = st.text_input(label='History Capacitor Bank Unity (F)', value = 72.7e-15)
+            st.session_state.Ch_cb_bits = st.text_input(label='History Capacitor Bank Bits', value = 5)
             st.session_state.beta = st.text_input(label='beta (Gain)', value = 0)
             st.session_state.fs = st.text_input(label='Sampling Frequency (Hz)', value = 9.6e9)
             
@@ -57,37 +81,43 @@ def main():
             st.session_state.f_mask_end = st.text_input(label='End Frequency (Hz)', value = 50e6)
             
             
+            
+            
+            
+            
+            
     
     if st.button("Generate"):
-        Ch = float(st.session_state.Ch)
-        Cr = float(st.session_state.Cr)
-        fs = float(st.session_state.fs)
-        beta = float(st.session_state.beta)
-        
-        H, omega, st.session_state.Zo, st.session_state.fc = filters.DFTF(st.session_state.filter_type, Ch, Cr, fs, beta)
+        if standalone_or_bank == 'Standalone':
+            Ch = float(st.session_state.Ch)
+            Cr = float(st.session_state.Cr)
+            fs = float(st.session_state.fs)
+            beta = float(st.session_state.beta)
+            
+            H, omega, st.session_state.Zo, st.session_state.fc = filters.DFTF(st.session_state.filter_type, Ch, Cr, fs, beta)
 
-        frequencies = omega * fs / (2 * np.pi)
-        
-        # Apply the frequency range filter
-        mask = (frequencies >= float(st.session_state.f_mask_start)) & (frequencies <= float(st.session_state.f_mask_end))
+            frequencies = omega * fs / (2 * np.pi)
+            
+            # Apply the frequency range filter
+            mask = (frequencies >= float(st.session_state.f_mask_start)) & (frequencies <= float(st.session_state.f_mask_end))
 
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=frequencies[mask],
-            y=20 * np.log10(np.abs(H[mask])),
-            mode='lines',
-            name='Magnitude (dB)'
-        ))
-        
-        fig.update_layout(
-            title='Magnitude Response of the 4/4 BPF',
-            xaxis_title='Frequency (Hz)',
-            yaxis_title='Magnitude (dB)',
-            template='plotly_dark'
-        )
-        
-        st.session_state.fig = fig
-        st.write(st.session_state.fig)
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=frequencies[mask],
+                y=20 * np.log10(np.abs(H[mask])),
+                mode='lines',
+                name='Magnitude (dB)'
+            ))
+            
+            fig.update_layout(
+                title='Magnitude Response of the 4/4 BPF',
+                xaxis_title='Frequency (Hz)',
+                yaxis_title='Magnitude (dB)',
+                template='plotly_dark'
+            )
+            
+            st.session_state.fig = fig
+            st.write(st.session_state.fig)
     else:
         if st.session_state.fig != 0:
             st.write(st.session_state.fig)  
@@ -103,10 +133,6 @@ def main():
         st.button("Plot Selected TFs", on_click = plot_selected)
 
     # table with data selection
- #   transfer_functions = local_session.query(TF).all()
- #   number_of_tfs = len(local_session.query(TF).all())
- #   colu1, colu2, colu3, colu4, colu5 = st.columns(5)
-    
     query = 'SELECT * FROM tf'
     
     df_1 = pd.read_sql(query, engine)
@@ -245,6 +271,16 @@ if __name__ == "__main__":
         st.session_state.Ch = 0.0
     if "beta" not in st.session_state:
         st.session_state.beta = 0
+        
+    if "Cr_cb_unity" not in st.session_state:
+        st.session_state.Cr_cb_unity = 0
+    if "Cr_cb_bits" not in st.session_state:
+        st.session_state.Cr_cb_bits = 0
+    if "Ch_cb_unity" not in st.session_state:
+        st.session_state.Ch_cb_unity = 0
+    if "Ch_cb_bits" not in st.session_state:
+        st.session_state.Ch_cb_bits = 0
+        
     if "fs" not in st.session_state:
         st.session_state.fs = 0
     if "f_mask_start" not in st.session_state:
