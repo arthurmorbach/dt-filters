@@ -80,7 +80,8 @@ def main():
             st.session_state.f_mask_start = st.text_input(label='Start Frequency (Hz)', value = -50e6)
             st.session_state.f_mask_end = st.text_input(label='End Frequency (Hz)', value = 50e6)
             
-            
+            st.session_state.n_plots = st.text_input(label='Number of Plots', value = 9)
+
             
             
             
@@ -118,6 +119,56 @@ def main():
             
             st.session_state.fig = fig
             st.write(st.session_state.fig)
+            
+        elif standalone_or_bank == 'Cap Bank':
+            # Variables
+            Ch = filters.cap_bank(bits=int(st.session_state.Ch_cb_bits), unity_cap=float(st.session_state.Ch_cb_unity))
+            Cr = filters.cap_bank(bits=int(st.session_state.Cr_cb_bits), unity_cap=float(st.session_state.Cr_cb_unity))
+            fs = float(st.session_state.fs)
+            beta = float(st.session_state.beta)
+
+            # Select the desired capacitance values
+            Ch = np.linspace(min(Ch), max(Ch), int(np.sqrt(float(st.session_state.n_plots))))
+            Cr = np.linspace(min(Cr), max(Cr), int(np.sqrt(float(st.session_state.n_plots))))
+
+            # Initialize 2D arrays for the selected values
+            H = np.zeros((len(Ch), len(Cr)), dtype=object)
+            Zo = np.zeros((len(Ch), len(Cr)))
+            fc = np.zeros((len(Ch), len(Cr)))
+            
+            for j in range(len(Ch)):
+                for i in range(len(Cr)):
+                    H[j][i], omega, Zo[j][i], fc[j][i] = filters.DFTF(st.session_state.filter_type, Ch[j], Cr[i], fs, beta)
+                    
+                    
+            
+            frequencies = omega * fs / (2 * np.pi)
+            
+            # Apply the frequency range filter
+            mask = (frequencies >= float(st.session_state.f_mask_start)) & (frequencies <= float(st.session_state.f_mask_end))
+
+            fig = go.Figure()
+            for j in range(len(Ch)):
+                for i in range(len(Cr)):
+                    fig.add_trace(go.Scatter(
+                        x=frequencies[mask],
+                        y=20 * np.log10(np.abs(H[j][i][mask])),
+                        mode='lines',
+                        name=f'Ch={round(Ch[j]*1e15, 2)} fF, Cr={round(Cr[i]*1e15, 2)} fF, Zo={Zo[j][i]}, Fc={round(fc[j][i]*1e-6, 2)} MHz'
+
+                    ))
+                    
+                    fig.update_layout(
+                        title='Magnitude Response of the 4/4 BPF',
+                        xaxis_title='Frequency (Hz)',
+                        yaxis_title='Magnitude (dB)',
+                        template='plotly_dark'
+                    )
+                    
+            st.session_state.fig = fig
+            st.write(st.session_state.fig)
+                    
+        
     else:
         if st.session_state.fig != 0:
             st.write(st.session_state.fig)  
@@ -301,5 +352,9 @@ if __name__ == "__main__":
         
     if "selected_tf" not in st.session_state:
         st.session_state.selected_tf = 0
-
+    
+    if "n_plots" not in st.session_state:
+        st.session_state.n_plots = 0
+    
+    
     main()
