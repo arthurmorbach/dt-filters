@@ -34,7 +34,7 @@ def BPF44(Ch, Cr, fs):
     print('arctan(Cr / Ch) = ', np.arctan(Cr / Ch))
     print('fs / (2 * np.pi) = ', fs / (2 * np.pi))
 
-    return(H, omega, Zo, fc)
+    return(H, omega, round(Zo, 3), round(fc,3))
 
 
 def BPF48(Ch, Cr, fs):
@@ -61,7 +61,7 @@ def BPF48(Ch, Cr, fs):
     print('arctan((1 - alpha)sin(pi/4)) / alpha + (1 - alpha)cos(pi/4) = ', np.arctan(((1 - alpha) * np.sin(np.pi / 4)) / (alpha + (1 - alpha) * np.cos(np.pi / 4))))
     print('fs / (2 * np.pi) = ', fs / (2 * np.pi))
     
-    return(H, omega, Zo, fc)
+    return(H, omega, round(Zo, 3), round(fc, 3))
 
 
 def BPF48CC(Ch, Cr, fs, beta):
@@ -88,12 +88,22 @@ def BPF48CC(Ch, Cr, fs, beta):
     print('arctan((1 - alpha)sin(pi/4)) / alpha + (1 - alpha)cos(pi/4) = ', np.arctan(((1 - alpha) * np.sin(np.pi / 4)) / (alpha + (1 - alpha) * np.cos(np.pi / 4))))
     print('fs / (2 * np.pi) = ', fs / (2 * np.pi))
     
-    return(H, omega, Zo, fc)
+    return(H, omega, round(Zo, 3), round(fc, 3))
 
+def cap_bank(bits, unity_cap):
+    cap_bank = []
+    
+    # Base capacitance (24 * unity_capacitance)
+    base_cap = (8 + 2**(bits - 1)) * unity_cap
 
+    # Loop through each bit combination from 0 to 2^bits - 1
+    for i in range(2**bits):
+        cap = base_cap
+        for j in range(bits):
+            # Calculate the weight for the current bit position
+            weight = 2 ** (bits - j - 1)
+            if (i & (1 << j)) != 0:
+                cap += weight * unity_cap
+        cap_bank.append(cap)
 
-
-
-
-
-
+    return cap_bank
