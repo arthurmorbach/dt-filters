@@ -257,7 +257,7 @@ def save_transfer_function():
                     Zo = str(st.session_state.Zo_array[j][i]),
                     cap_bank = True,
                     time = datetime.utcnow())
-            local_session.add(TF_to_add)
+                local_session.add(TF_to_add)
         local_session.commit()
             
     
