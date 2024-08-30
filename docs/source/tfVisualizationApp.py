@@ -13,9 +13,6 @@ def main():
 
     with st.sidebar:        
         types_of_filters = ("4/4 BPF", "4/8 BPF", "4/8 BPF CC")
-        # st.session_state.filter_type = st.selectbox(
-        #     label = "Select Filter", 
-        #     options = types_of_filters)
         
         st.header("Filter Setup")
         
@@ -106,7 +103,7 @@ def main():
             ))
             
             fig.update_layout(
-                title='Magnitude Response of the 4/4 BPF',
+                title='Magnitude Response',
                 xaxis_title='Frequency (Hz)',
                 yaxis_title='Magnitude (dB)',
                 template='plotly_dark'
@@ -152,7 +149,7 @@ def main():
                     ))
                     
                     fig.update_layout(
-                        title='Magnitude Response of the 4/4 BPF',
+                        title='Magnitude Response',
                         xaxis_title='Frequency (Hz)',
                         yaxis_title='Magnitude (dB)',
                         template='plotly_dark'
@@ -164,7 +161,6 @@ def main():
         if st.session_state.fig != 0:
             st.write(st.session_state.fig)  
             
-    
     col1, col2, col3, col4, col5 = st.columns(5)
     
     with col1:
@@ -174,19 +170,37 @@ def main():
     with col3:
         st.button("Plot Selected TFs", on_click = plot_selected)
         
-    # ADD FILTER BASED ON TFNAME OF CAP_BANK = TRUE
-    # ADD FILTER BASED ON TFNAME OF CAP_BANK = TRUE
-    # ADD FILTER BASED ON TFNAME OF CAP_BANK = TRUE
-    # ADD FILTER BASED ON TFNAME OF CAP_BANK = TRUE
-    # ADD FILTER BASED ON TFNAME OF CAP_BANK = TRUE
+    # FILTER BASED ON TFNAME IF CAP_BANK = TRUE
+    
+    banks = local_session.query(TF).filter(TF.cap_bank == True)
 
-        
+    options = []
+    for bank in banks:
+        options.append(bank.tf_name)
+    options = list(sorted(set(options)))
+    options.append('All')
+    with col4:
+        cb_to_show = st.selectbox(
+            label = "Cap Banks", 
+            options = options,
+            index = len(options) - 1 
+        )
 
-    # table with data selection
-    query = 'SELECT * FROM tf'
+    if cb_to_show == 'All':
+        query = 'SELECT * FROM tf'
+    else:
+        # get tf_id from the selected tf name
+        tf_id = []
+        for tf in banks:
+            if tf.tf_name == cb_to_show:
+                tf_id.append(tf.id)
+
+        # filter rows from the database based on the tf name selected
+        condition = f'id IN ({", ".join(map(str, tf_id))})'
+        query = f'SELECT * FROM tf WHERE {condition}'
     
     df_1 = pd.read_sql(query, engine)
-   
+    
     # convert the Column type to datetime
     df_1['time'] = pd.to_datetime(df_1['time'])
     
@@ -230,6 +244,7 @@ def main():
     st.session_state.selected_tf = edited_df[edited_df['Select'] == True]['ID'].tolist()
     
     print('SELECTED TF: ', st.session_state.selected_tf)
+    
     
     
 def save_transfer_function():
