@@ -19,10 +19,10 @@ def main():
         
         st.header("Filter Setup")
         
-        standalone_or_bank = st.selectbox(
+        st.session_state.standalone_or_bank = st.selectbox(
             label='Standalone or Cap Bank',
             options=['Standalone', 'Cap Bank'])
-        if standalone_or_bank == 'Standalone':
+        if st.session_state.standalone_or_bank == 'Standalone':
             # use the settings from the last reading, if no settings, use standard values
             if local_session.query(TF).all():
                 filter_type = st.selectbox(
@@ -60,7 +60,7 @@ def main():
                 st.session_state.f_mask_start = st.text_input(label='Start Frequency (Hz)', value = -50e6)
                 st.session_state.f_mask_end = st.text_input(label='End Frequency (Hz)', value = 50e6)
             
-        elif standalone_or_bank == 'Cap Bank':
+        elif st.session_state.standalone_or_bank == 'Cap Bank':
             filter_type = st.selectbox(
                     label = "Select Filter", 
                     options = types_of_filters)
@@ -75,21 +75,16 @@ def main():
             st.session_state.Ch_cb_unity = st.text_input(label='History Capacitor Bank Unity (F)', value = 72.7e-15)
             st.session_state.Ch_cb_bits = st.text_input(label='History Capacitor Bank Bits', value = 5)
             st.session_state.beta = st.text_input(label='beta (Gain)', value = 0)
-            st.session_state.fs = st.text_input(label='Sampling Frequency (Hz)', value = 9.6e9)
+            st.session_state.fs = st.text_input(label='Sampling Frequency (Hz)', value = 600e6)
             
             st.session_state.f_mask_start = st.text_input(label='Start Frequency (Hz)', value = -50e6)
             st.session_state.f_mask_end = st.text_input(label='End Frequency (Hz)', value = 50e6)
             
-            st.session_state.n_plots = st.text_input(label='Number of Plots', value = 9)
+            st.session_state.n_plots = st.text_input(label='Number of Plots (4, 9, 16, 25)', value = 9)
 
             
-            
-            
-            
-            
-    
     if st.button("Generate"):
-        if standalone_or_bank == 'Standalone':
+        if st.session_state.standalone_or_bank == 'Standalone':
             Ch = float(st.session_state.Ch)
             Cr = float(st.session_state.Cr)
             fs = float(st.session_state.fs)
@@ -120,25 +115,25 @@ def main():
             st.session_state.fig = fig
             st.write(st.session_state.fig)
             
-        elif standalone_or_bank == 'Cap Bank':
+        elif st.session_state.standalone_or_bank == 'Cap Bank':
             # Variables
-            Ch = filters.cap_bank(bits=int(st.session_state.Ch_cb_bits), unity_cap=float(st.session_state.Ch_cb_unity))
-            Cr = filters.cap_bank(bits=int(st.session_state.Cr_cb_bits), unity_cap=float(st.session_state.Cr_cb_unity))
+            Ch_array = filters.cap_bank(bits=int(st.session_state.Ch_cb_bits), unity_cap=float(st.session_state.Ch_cb_unity))
+            Cr_array = filters.cap_bank(bits=int(st.session_state.Cr_cb_bits), unity_cap=float(st.session_state.Cr_cb_unity))
             fs = float(st.session_state.fs)
             beta = float(st.session_state.beta)
 
             # Select the desired capacitance values
-            Ch = np.linspace(min(Ch), max(Ch), int(np.sqrt(float(st.session_state.n_plots))))
-            Cr = np.linspace(min(Cr), max(Cr), int(np.sqrt(float(st.session_state.n_plots))))
+            st.session_state.Ch_array = np.linspace(min(Ch_array), max(Ch_array), int(np.sqrt(float(st.session_state.n_plots))))
+            st.session_state.Cr_array = np.linspace(min(Cr_array), max(Cr_array), int(np.sqrt(float(st.session_state.n_plots))))
 
             # Initialize 2D arrays for the selected values
-            H = np.zeros((len(Ch), len(Cr)), dtype=object)
-            Zo = np.zeros((len(Ch), len(Cr)))
-            fc = np.zeros((len(Ch), len(Cr)))
+            H = np.zeros((len(st.session_state.Ch_array), len(st.session_state.Cr_array)), dtype=object)
+            st.session_state.Zo_array = np.zeros((len(st.session_state.Ch_array), len(st.session_state.Cr_array)))
+            st.session_state.fc_array = np.zeros((len(st.session_state.Ch_array), len(st.session_state.Cr_array)))
             
-            for j in range(len(Ch)):
-                for i in range(len(Cr)):
-                    H[j][i], omega, Zo[j][i], fc[j][i] = filters.DFTF(st.session_state.filter_type, Ch[j], Cr[i], fs, beta)
+            for j in range(len(st.session_state.Ch_array)):
+                for i in range(len(st.session_state.Cr_array)):
+                    H[j][i], omega, st.session_state.Zo_array[j][i], st.session_state.fc_array[j][i] = filters.DFTF(st.session_state.filter_type, st.session_state.Ch_array[j], st.session_state.Cr_array[i], fs, beta)
                     
                     
             
@@ -148,13 +143,13 @@ def main():
             mask = (frequencies >= float(st.session_state.f_mask_start)) & (frequencies <= float(st.session_state.f_mask_end))
 
             fig = go.Figure()
-            for j in range(len(Ch)):
-                for i in range(len(Cr)):
+            for j in range(len(st.session_state.Ch_array)):
+                for i in range(len(st.session_state.Cr_array)):
                     fig.add_trace(go.Scatter(
                         x=frequencies[mask],
                         y=20 * np.log10(np.abs(H[j][i][mask])),
                         mode='lines',
-                        name=f'Ch={round(Ch[j]*1e15, 2)} fF, Cr={round(Cr[i]*1e15, 2)} fF, Zo={Zo[j][i]}, Fc={round(fc[j][i]*1e-6, 2)} MHz'
+                        name=f'Ch={round(st.session_state.Ch_array[j]*1e15, 2)} fF, Cr={round(st.session_state.Cr_array[i]*1e15, 2)} fF, Zo={st.session_state.Zo_array[j][i]}, Fc={round(st.session_state.fc_array[j][i]*1e-6, 2)} MHz'
 
                     ))
                     
@@ -202,11 +197,11 @@ def main():
                         'beta' : 'beta',
                         'fs' : 'Fs (Hz)',
                         'fc' : 'Fc (Hz)', 
-                        'Zo' : 'Zo (Ohms)', 
+                        'Zo' : 'Zo (Ohms)',
                         'time' : 'datetime'}, inplace = True)
 
     # drop unecessary columns for the user
-   # df_1.drop(columns = ['columns to drop', 'columns to drop'], inplace = True)
+    df_1.drop(columns = ['cap_bank'], inplace = True)
 
     # add checkbox
     df_1.insert(0, 'Select', [False] * len(df_1))
@@ -234,18 +229,37 @@ def main():
     
     
 def save_transfer_function():
-    TF_to_add= TF(tf_name = st.session_state.tf_name, 
-                  filter_type = st.session_state.filter_type,
-                  Cr = str(st.session_state.Cr), 
-                  Ch = str(st.session_state.Ch), 
-                  beta = str(st.session_state.beta), 
-                  fs = str(st.session_state.fs), 
-                  fc = str(st.session_state.fc), 
-                  Zo = str(st.session_state.Zo),
-                  time = datetime.utcnow())
+    if st.session_state.standalone_or_bank == 'Standalone':
+        TF_to_add= TF(tf_name = st.session_state.tf_name, 
+                    filter_type = st.session_state.filter_type,
+                    Cr = str(st.session_state.Cr), 
+                    Ch = str(st.session_state.Ch), 
+                    beta = str(st.session_state.beta), 
+                    fs = str(st.session_state.fs), 
+                    fc = str(st.session_state.fc), 
+                    Zo = str(st.session_state.Zo),
+                    cap_bank = False,
+                    time = datetime.utcnow())
 
-    local_session.add(TF_to_add)
-    local_session.commit()
+        local_session.add(TF_to_add)
+        local_session.commit()
+    elif st.session_state.standalone_or_bank == 'Cap Bank':
+        for j in range(len(st.session_state.Ch_array)):
+            for i in range(len(st.session_state.Cr_array)):
+                TF_to_add= TF(
+                    tf_name = st.session_state.tf_name, 
+                    filter_type = st.session_state.filter_type,
+                    Cr = str(st.session_state.Cr_array[i]), 
+                    Ch = str(st.session_state.Ch_array[j]), 
+                    beta = str(st.session_state.beta), 
+                    fs = str(st.session_state.fs), 
+                    fc = str(st.session_state.fc_array[j][i]), 
+                    Zo = str(st.session_state.Zo_array[j][i]),
+                    cap_bank = True,
+                    time = datetime.utcnow())
+            local_session.add(TF_to_add)
+        local_session.commit()
+            
     
     
 def delete_from_db():
@@ -331,6 +345,17 @@ if __name__ == "__main__":
         st.session_state.Ch_cb_unity = 0
     if "Ch_cb_bits" not in st.session_state:
         st.session_state.Ch_cb_bits = 0
+    if "Ch_array" not in st.session_state:
+        st.session_state.Ch_array = 0
+    if "Cr_array" not in st.session_state:
+        st.session_state.Cr_array = 0
+    if "Zo_array" not in st.session_state:
+        st.session_state.Zo_array = 0
+    if "fc_array" not in st.session_state:
+        st.session_state.fc_array = 0
+        
+    if "standalone_or_bank" not in st.session_state:
+        st.session_state.standalone_or_bank = 'Standalone'
         
     if "fs" not in st.session_state:
         st.session_state.fs = 0
