@@ -20,6 +20,7 @@ class TF(Base):
     fs : Mapped[str]
     fc : Mapped[str]
     Zo : Mapped[str]
+    cap_bank : Mapped[bool]
     time : Mapped[str] = mapped_column(nullable = False)
 
 Base.metadata.create_all(bind = engine)
