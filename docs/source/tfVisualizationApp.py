@@ -135,8 +135,6 @@ def main():
                 for i in range(len(st.session_state.Cr_array)):
                     H[j][i], omega, st.session_state.Zo_array[j][i], st.session_state.fc_array[j][i] = filters.DFTF(st.session_state.filter_type, st.session_state.Ch_array[j], st.session_state.Cr_array[i], fs, beta)
                     
-                    
-            
             frequencies = omega * fs / (2 * np.pi)
             
             # Apply the frequency range filter
@@ -162,8 +160,6 @@ def main():
                     
             st.session_state.fig = fig
             st.write(st.session_state.fig)
-                    
-        
     else:
         if st.session_state.fig != 0:
             st.write(st.session_state.fig)  
@@ -177,6 +173,14 @@ def main():
         st.button("Delete from DB", on_click = delete_from_db)
     with col3:
         st.button("Plot Selected TFs", on_click = plot_selected)
+        
+    # ADD FILTER BASED ON TFNAME OF CAP_BANK = TRUE
+    # ADD FILTER BASED ON TFNAME OF CAP_BANK = TRUE
+    # ADD FILTER BASED ON TFNAME OF CAP_BANK = TRUE
+    # ADD FILTER BASED ON TFNAME OF CAP_BANK = TRUE
+    # ADD FILTER BASED ON TFNAME OF CAP_BANK = TRUE
+
+        
 
     # table with data selection
     query = 'SELECT * FROM tf'
