@@ -101,6 +101,15 @@ def main():
                 mode='lines',
                 name='Magnitude (dB)'
             ))
+
+            fig.add_annotation(
+            x=frequencies[mask][-1],  # Position of the annotation on the x-axis
+            y=20 * np.log10(np.abs(H[mask][-1])),  # Position of the annotation on the y-axis
+            text=f'Ch={round(Ch/1e-15, 3)} fF, Cr={round(Cr/1e-15, 3)} fF, Zo={round(float(st.session_state.Zo)/1e3, 3)} k, Fc={round(float(st.session_state.fc)/1e6, 3)} MHz',  # The text to display
+            showarrow=False, 
+            font=dict(size=12, color="white"), 
+            align="right"
+            )
             
             fig.update_layout(
                 title='Magnitude Response',
