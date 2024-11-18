@@ -1,6 +1,5 @@
 import numpy as np
 
-
 def DFTF(filter, Ch, Cr, fs, beta = 0):
     if filter == 'BPF44':
         return BPF44(Ch, Cr, fs)
@@ -91,16 +90,18 @@ def BPF48CC(Ch, Cr, fs, beta):
     return(H, omega, round(Zo, 3), round(fc, 3))
 
 def cap_bank(bits, unity_cap):
+    
+    #based on the geometry of the cap bank
+    #needs to be optimized some way
+    
     cap_bank = []
     
     # Base capacitance (24 * unity_capacitance)
     base_cap = (8 + 2**(bits - 1)) * unity_cap
 
-    # Loop through each bit combination from 0 to 2^bits - 1
     for i in range(2**bits):
         cap = base_cap
         for j in range(bits):
-            # Calculate the weight for the current bit position
             weight = 2 ** (bits - j - 1)
             if (i & (1 << j)) != 0:
                 cap += weight * unity_cap
